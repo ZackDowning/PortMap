@@ -72,7 +72,6 @@ def w_mgmt_file_main(current_window=None):
     layout = [
         gui_print('Select file containing device management IP addresses'),
         file_browse_botton('Browse'),
-        gui_checkbox('Use CUCM Export', key='cucm_export'),
         button('Next')
     ]
     return Sg.Window(window_title, layout, margins=(100, 100))
@@ -83,7 +82,7 @@ def w_save_folder(current_window=None):
     if current_window is not None:
         current_window.close()
     layout = [
-        gui_print('Select folder to save Inventory Export'),
+        gui_print('Select folder to save Port Map Export'),
         folder_browse_botton('Browse'),
         button('Save File')
     ]
@@ -112,7 +111,7 @@ def w_file_not_found(current_window, folder=False):
     if folder:
         layout = [
             gui_print('Directory not found.'),
-            gui_print('Select folder to save Inventory Export'),
+            gui_print('Select folder to save Port Map Export'),
             folder_browse_botton('Browse'),
             button('Retry')
         ]
