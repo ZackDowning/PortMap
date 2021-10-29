@@ -3,9 +3,10 @@ from net_async import AsyncSessions, BugCheck, InputError, ForceSessionRetry
 import time
 from ipaddress import IPv4Network
 
+
 # Check for vrf usage
 # Get list of vrfs
-# Run 'show ip arp' for each vrf'
+# Run 'show ip arp vrf all'|'show ip arp vrf *' for each vrf'
 # Get routed networks from show ip route vrf all/show ip route vrf * or show ip interface
 
 def router_check(session, intfs, sh_routing):
@@ -30,8 +31,8 @@ def router_check(session, intfs, sh_routing):
                 ip_vlan_count += 1
         if intf['ipaddr'] != 'unassigned' and (intf['status'] and intf['proto']) == 'up' \
                 and any(intf_name in intf['intf'] for intf_name in [
-            'Ethernet', 'Te', 'Port-channel', 'Hu', 'Fo', 'Eth', 'Po'
-        ]):
+                'Ethernet', 'Te', 'Port-channel', 'Hu', 'Fo', 'Eth', 'Po'
+                ]):
             return True
     if ip_vlan_count > 1:
         if nxos:
@@ -61,16 +62,19 @@ def discovery(session):
         mac_addrs = session.send_command('show mac address-table')
         sh_ip_intf = session.send_command('show ip interface')
         routing_check = session.send_command('show run | i routing')
-        if 'nxos' in session.device_type:
-            show_vrf = session.send_command('show vrf')
-        else:
-            show_vrf = session.send_command('show ip vrf')
-
-
-        show_ip_arp = session.send_command('show ip arp')
-        if any('Authorization failed' in cmd for cmd in [cdp_neighbors, switchports, mac_addrs, sh_ip_intf]):
+        cmds = [cdp_neighbors, switchports, mac_addrs, sh_ip_intf, routing_check]
+        router = router_check(session, sh_ip_intf, routing_check)
+        if router:
+            if 'nxos' in session.device_type:
+                show_ip_arp = session.send_command('show ip arp vrf all')
+                routes = session.send_command('show ip route vrf all direct')
+            else:
+                show_vrf = session.send_command('show vrf')
+                routes = session.send_command('show ip route vrf * connected | i ^C_|Codes|Gateway')
+            # cmds += [show_vrf, show_ip_arp]
+        if any('Authorization failed' in cmd for cmd in cmds):
             raise ForceSessionRetry
-        port_parser = PortParser(cdp_neighbors, switchports, mac_addrs, sh_ip_intf, routing_check, session)
+        # port_parser = PortParser(cdp_neighbors, switchports, mac_addrs, sh_ip_intf, routing_check, session)
     except OSError:
         raise ForceSessionRetry
 
@@ -78,11 +82,8 @@ def discovery(session):
         'summary': {
             'vlan_util': port_parser.vlan_util,
             'intf_util': port_parser.intf_util,
-            'router': {
-                'check': router_check(),
-                'arp':
-            }
         },
+        'router': router,
         'switchports': port_parser.switchports
     }
 
