@@ -5,6 +5,33 @@ from datetime import datetime
 import re
 
 
+class RouterParser:
+    """
+Parses device to check if it is a router, connected networks, and arp cache.
+    Parameters:
+        session = Netmiko Connect Handler
+
+        intfs = output of 'show ip interface'
+
+        sh_routing = output of 'show run | i routing'
+
+    Attributes:
+        check = bool(if device is router)
+
+        arp_table = list(output of 'show ip arp')
+
+        networks = list(connected networks)
+"""
+    def __init__(self, session, intfs, sh_routing):
+
+
+        def router_details():
+
+
+
+        self.check = router_check()
+
+
 class PortParser:
     """
     Parses outputs of commands: 'show cdp neighbor', 'show interface switchport', and 'show mac address-table'.
