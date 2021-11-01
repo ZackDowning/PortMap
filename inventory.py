@@ -3,7 +3,6 @@ from net_async import AsyncSessions, BugCheck, InputError, ForceSessionRetry
 # import time
 # from ipaddress import IPv4Network
 
-# TODO: Check if switchports output == '' - router is true - add to summary
 # TODO: Get list of active vlans and active interfaces for each vlan - add to summary
 # TODO: Get list of active interfaces out of total available - add to summary
 # TODO: Get POE capacity - add to summary
@@ -19,6 +18,7 @@ If access interface:
             check if one == mac address of voice vlan
         elif host vlan hosts > 2:
             dumb switch
+    if lldp or cdp n
 """
 # TODO: Aggregate info into master switchport list - add to summary
 
@@ -36,7 +36,8 @@ def discovery(session):
             }"""
     try:
         cdp_neighbors = session.send_command('show cdp neighbor detail')
-        switchports = session.send_command('show interfaces switchport')
+        lldp_neighbors = session.send_command('show lldp neighbor detail')
+        switchports = session.send_command('show interface switchport')
         mac_addrs = session.send_command('show mac address-table | ex CPU')
         sh_ip_intf = session.send_command('show ip interface brief | exclude unassigned|down|Status')
         if type(sh_ip_intf) is not list:
@@ -47,7 +48,7 @@ def discovery(session):
             router = True
         else:
             router = False
-        cmds = [cdp_neighbors, switchports, mac_addrs, sh_ip_intf]
+        cmds = [cdp_neighbors, switchports, mac_addrs, sh_ip_intf, lldp_neighbors]
         # port_parser = PortParser(cdp_neighbors, switchports, mac_addrs, sh_ip_intf, session)
 
         output = {
@@ -60,6 +61,7 @@ def discovery(session):
             if 'nxos' in session.devicetype:
                 show_ip_arp = session.send_command('show ip arp vrf all')
                 cmds += [show_ip_arp]
+                output['arp_table'] = show_ip_arp
             else:
                 show_vrf = session.send_command('show vrf')
                 cmds += [show_vrf]

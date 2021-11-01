@@ -7,40 +7,50 @@ import re
 
 class PortParser:
     """
-    Parses outputs of commands: 'show cdp neighbor', 'show interface switchport', and 'show mac address-table'.
-        Attributes:
-            phones = []\n
-            routers_switches = []\n
-            waps = []\n
-            others = []\n
-        Dictionary format within lists:
-            {
-                'device
-                'hostname',\n
-                'ip_address',\n
-                'model',\n
-                'software_version',\n
-                'neighbor': { (on router_switch, intfs are not in 'neighbor')
-                    'hostname',\n
-                    'ip_address',\n
-                    'remote_intf', (neighbor interface)\n
-                    'local_intf', (local to device, not on wap or phone)\n
-                }\n
-                'mac_addr', (phone only)\n
-                'voice_vlan', (phone only)
-            }
+Parses TEXTFSM outputs of commands, correlates MAC addresses and CDP/LLDP neighbors to switchports.
+Summarizes active vlans
+    Parameters:
+        cdp_neighbors = 'show cdp neighbor'
+
+        switchports = 'show interface switchport'
+
+        mac_addrs = 'show mac address-table | ex CPU'
+
+    Attributes:
+        summary = {}
+
+        interfaces = [
+        {
+        'interface': 'Gi1/0/1',
+        'status': 'Up'|'Down',
+        'mode': 'Access'|'Trunk',
+        'access_vlan': 1,
+        'voice_vlan': 1,
+        'trunking_vlans': '1-4096'
+        'mac_addresses':
+        }
+        ]
     """
 
-    def __init__(self, cdp_neighbors, switchports, mac_addrs, session):
+    def __init__(self, cdp_neighbors, switchports, mac_addrs):
         nxos = False
         try:
             _ = cdp_neighbors[0]['destination_host']
         except KeyError:
             nxos = True
 
-        self.switchports = []
+        def parse(intfs):
+            switchport = {
+                'interface': None,
+                'status': None,
+                'mode': None,
+                'access_vlan': None
+                'trunking_vlans'
+            }
+            for intf in intfs:
 
-        # multithread(parse, cdp_neighbors)
+
+        multithread(parse, switchports)
 
 
 def output_to_spreadsheet(devices, failed_devices, file_location):
